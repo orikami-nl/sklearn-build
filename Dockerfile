@@ -17,7 +17,8 @@ RUN yum update -y && \
     atlas-devel \
     atlas-sse3-devel \
     blas-devel \
-    lapack-devel
+    lapack-devel && \
+    rm -rf /var/cache/yum
 
 WORKDIR /build
 
@@ -45,7 +46,9 @@ RUN source lambda_build/bin/activate && \
     find $VIRTUAL_ENV/lib/python3.6/site-packages/ -name "*.so" | xargs strip && \
     # Zip
     cd $VIRTUAL_ENV/lib/python3.6/site-packages/ && \
-    zip -r -9 -q /build/output.zip *
+    zip -r -9 -q /build/output.zip * && \
+    rm -rf /root/.cache /var/cache/yum
+
 
 # Copy to output folder (when mounted, this will be available on your HD)
 COPY ./build.sh build.sh
