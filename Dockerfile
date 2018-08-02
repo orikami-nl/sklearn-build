@@ -1,4 +1,6 @@
-FROM amazonlinux:2017.03.1.20170812
+
+# 1. Build stage 
+FROM amazonlinux:2017.03.1.20170812 AS build
 
 RUN yum update -y && \
     yum install -y \
@@ -18,7 +20,7 @@ RUN yum update -y && \
     atlas-sse3-devel \
     blas-devel \
     lapack-devel && \
-    rm -rf /var/cache/yum
+    yum clean all && rm -rf /var/cache/yum
 
 WORKDIR /build
 
@@ -47,9 +49,10 @@ RUN source lambda_build/bin/activate && \
     # Zip
     cd $VIRTUAL_ENV/lib/python3.6/site-packages/ && \
     zip -r -9 -q /build/output.zip * && \
-    rm -rf /root/.cache /var/cache/yum
+    rm -rf /root/.cache /var/cache/yum && yum clean all
 
-
-# Copy to output folder (when mounted, this will be available on your HD)
-COPY ./build.sh build.sh
-CMD chmod +x /build/build.sh && /build/build.sh
+# 2. Copy Data Stage
+FROM amazonlinux:2017.03.1.20170812
+WORKDIR /build
+COPY --from=build /build/output.zip .
+CMD cp /build/output.zip /outputs
